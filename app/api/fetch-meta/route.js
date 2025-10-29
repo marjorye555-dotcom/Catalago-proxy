@@ -1,16 +1,23 @@
 import fetch from "node-fetch";
 import * as cheerio from "cheerio";
+import { NextResponse } from "next/server";
 
-export default async function handler(req, res) {
-  const url = req.query.url;
-
-  // Permitir requisições do catálogo
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+export async function GET(request) {
+  const { searchParams } = new URL(request.url);
+  const url = searchParams.get("url");
 
   if (!url) {
-    return res.status(400).json({ success: false, error: "URL ausente." });
+    return NextResponse.json(
+      { success: false, error: "URL ausente." },
+      { 
+        status: 400,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET",
+          "Access-Control-Allow-Headers": "Content-Type",
+        }
+      }
+    );
   }
 
   try {
@@ -40,18 +47,38 @@ export default async function handler(req, res) {
       $("meta[name=price]").attr("content") ||
       "";
 
-    return res.status(200).json({
-      success: true,
-      title: title.trim(),
-      image,
-      price,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        title: title.trim(),
+        image,
+        price,
+      },
+      {
+        status: 200,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET",
+          "Access-Control-Allow-Headers": "Content-Type",
+        }
+      }
+    );
   } catch (error) {
     console.error("Erro ao buscar:", error);
-    return res.status(500).json({
-      success: false,
-      error: "Erro ao carregar metadados",
-      details: error.message,
-    });
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Erro ao carregar metadados",
+        details: error.message,
+      },
+      {
+        status: 500,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET",
+          "Access-Control-Allow-Headers": "Content-Type",
+        }
+      }
+    );
   }
 }
