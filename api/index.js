@@ -4,9 +4,15 @@ import fetch from "node-fetch";
 import * as cheerio from "cheerio";
 
 const app = express();
-app.use(cors()); // Permite acesso público
+app.use(cors());
 
-app.get("/fetch-meta", async (req, res) => {
+// 🔹 Rota padrão para testar se o servidor está ativo
+app.get("/", (req, res) => {
+  res.json({ ok: true, message: "Servidor proxy ativo" });
+});
+
+// 🔹 Rota para buscar metadados
+app.get("/api/fetch-meta", async (req, res) => {
   const { url } = req.query;
   if (!url) return res.status(400).json({ error: "URL não informada." });
 
@@ -17,6 +23,7 @@ app.get("/fetch-meta", async (req, res) => {
           "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121 Safari/537.36",
       },
     });
+
     const html = await response.text();
     const $ = cheerio.load(html);
 
@@ -34,7 +41,7 @@ app.get("/fetch-meta", async (req, res) => {
       $('meta[name="twitter:data1"]').attr("content") ||
       "";
 
-    res.json({
+    res.status(200).json({
       success: true,
       title: title.trim(),
       image: image.trim(),
