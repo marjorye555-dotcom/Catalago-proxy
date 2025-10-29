@@ -1,23 +1,18 @@
 import fetch from "node-fetch";
 import * as cheerio from "cheerio";
-import { NextResponse } from "next/server";
 
-export async function GET(request) {
-  const { searchParams } = new URL(request.url);
-  const url = searchParams.get("url");
+export default async function handler(req, res) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
+  const url = req.query.url;
   if (!url) {
-    return NextResponse.json(
-      { success: false, error: "URL ausente." },
-      { 
-        status: 400,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET",
-          "Access-Control-Allow-Headers": "Content-Type",
-        }
-      }
-    );
+    return res.status(400).json({ success: false, error: "URL ausente." });
   }
 
   try {
@@ -44,41 +39,20 @@ export async function GET(request) {
     const price =
       $('meta[property="product:price:amount"]').attr("content") ||
       $('meta[itemprop="price"]').attr("content") ||
-      $("meta[name=price]").attr("content") ||
       "";
 
-    return NextResponse.json(
-      {
-        success: true,
-        title: title.trim(),
-        image,
-        price,
-      },
-      {
-        status: 200,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET",
-          "Access-Control-Allow-Headers": "Content-Type",
-        }
-      }
-    );
+    return res.status(200).json({
+      success: true,
+      title: title.trim(),
+      image,
+      price,
+    });
   } catch (error) {
     console.error("Erro ao buscar:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Erro ao carregar metadados",
-        details: error.message,
-      },
-      {
-        status: 500,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET",
-          "Access-Control-Allow-Headers": "Content-Type",
-        }
-      }
-    );
+    return res.status(500).json({
+      success: false,
+      error: "Erro ao carregar metadados",
+      details: error.message,
+    });
   }
 }
