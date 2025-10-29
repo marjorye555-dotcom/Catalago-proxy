@@ -1,18 +1,21 @@
-import fetch from "node-fetch";
 import * as cheerio from "cheerio";
 
-export default async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+export async function GET(req) {
+  const { searchParams } = new URL(req.url);
+  const url = searchParams.get("url");
 
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
+  // ✅ CORS
+  const headers = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+  };
 
-  const url = req.query.url;
   if (!url) {
-    return res.status(400).json({ success: false, error: "URL ausente." });
+    return new Response(JSON.stringify({ success: false, error: "URL ausente." }), {
+      status: 400,
+      headers,
+    });
   }
 
   try {
@@ -39,20 +42,39 @@ export default async function handler(req, res) {
     const price =
       $('meta[property="product:price:amount"]').attr("content") ||
       $('meta[itemprop="price"]').attr("content") ||
+      $("meta[name='price']").attr("content") ||
       "";
 
-    return res.status(200).json({
-      success: true,
-      title: title.trim(),
-      image,
-      price,
-    });
+    return new Response(
+      JSON.stringify({
+        success: true,
+        title: title.trim(),
+        image,
+        price,
+      }),
+      { status: 200, headers }
+    );
   } catch (error) {
     console.error("Erro ao buscar:", error);
-    return res.status(500).json({
-      success: false,
-      error: "Erro ao carregar metadados",
-      details: error.message,
-    });
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: "Erro ao carregar metadados",
+        details: error.message,
+      }),
+      { status: 500, headers }
+    );
   }
+}
+
+// ✅ Para o método OPTIONS (pré-flight CORS)
+export function OPTIONS() {
+  return new Response(null, {
+    status: 200,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET,OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    },
+  });
 }
