@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "api/fetch-meta.js", "use": "@vercel/node" }
+  ],
+  "routes": [
+    { "src": "/api/fetch-meta", "dest": "/api/fetch-meta.js" }
+  ]
+}
