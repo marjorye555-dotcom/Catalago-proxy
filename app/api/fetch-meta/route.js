@@ -1,19 +1,22 @@
 import * as cheerio from "cheerio";
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET,OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
+/**
+ * Lida com requisições GET (rota principal da API)
+ */
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const url = searchParams.get("url");
 
-  const headers = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET,OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
-  };
-
   if (!url) {
     return new Response(JSON.stringify({ success: false, error: "URL ausente." }), {
       status: 400,
-      headers,
+      headers: corsHeaders,
     });
   }
 
@@ -51,7 +54,10 @@ export async function GET(req) {
         image,
         price,
       }),
-      { status: 200, headers }
+      {
+        status: 200,
+        headers: corsHeaders,
+      }
     );
   } catch (error) {
     console.error("Erro ao buscar:", error);
@@ -61,18 +67,17 @@ export async function GET(req) {
         error: "Erro ao carregar metadados",
         details: error.message,
       }),
-      { status: 500, headers }
+      { status: 500, headers: corsHeaders }
     );
   }
 }
 
+/**
+ * Lida com requisições OPTIONS (pré-flight do CORS)
+ */
 export function OPTIONS() {
   return new Response(null, {
     status: 200,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET,OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    },
+    headers: corsHeaders,
   });
 }
