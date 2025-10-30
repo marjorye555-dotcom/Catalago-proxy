@@ -1,20 +1,28 @@
 import * as cheerio from "cheerio";
-import fetch from "node-fetch";
 
-export async function GET(request) {
-  const { searchParams } = new URL(request.url);
+export async function GET(req) {
+  const { searchParams } = new URL(req.url);
   const url = searchParams.get("url");
 
+  const headers = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+  };
+
   if (!url) {
-    return Response.json({ error: "URL não informada." }, { status: 400 });
+    return new Response(JSON.stringify({ success: false, error: "URL ausente." }), {
+      status: 400,
+      headers,
+    });
   }
 
   try {
     const response = await fetch(url, {
       headers: {
         "User-Agent":
-          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121 Safari/537.36"
-      }
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0 Safari/537.36",
+      },
     });
 
     const html = await response.text();
@@ -23,25 +31,43 @@ export async function GET(request) {
     const title =
       $('meta[property="og:title"]').attr("content") ||
       $("title").text() ||
-      "";
+      "Produto sem título";
+
     const image =
       $('meta[property="og:image"]').attr("content") ||
       $('meta[name="twitter:image"]').attr("content") ||
-      "";
+      "https://via.placeholder.com/300x200?text=Imagem+Indisponível";
+
     const price =
       $('meta[property="product:price:amount"]').attr("content") ||
-      $('meta[property="og:price:amount"]').attr("content") ||
-      $('meta[name="twitter:data1"]').attr("content") ||
+      $('meta[itemprop="price"]').attr("content") ||
+      $("meta[name='price']").attr("content") ||
       "";
 
-    return Response.json({
-      success: true,
-      title: title.trim(),
-      image: image.trim(),
-      price: price.trim()
-    });
-  } catch (err) {
-    console.error("Erro ao buscar metadados:", err.message);
-    return Response.json({ error: "Falha ao buscar metadados." }, { status: 500 });
+    return new Response(
+      JSON.stringify({ success: true, title: title.trim(), image, price }),
+      { status: 200, headers }
+    );
+  } catch (error) {
+    console.error("Erro ao buscar:", error);
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: "Erro ao carregar metadados",
+        details: error.message,
+      }),
+      { status: 500, headers }
+    );
   }
+}
+
+export function OPTIONS() {
+  return new Response(null, {
+    status: 200,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET,OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    },
+  });
 }
