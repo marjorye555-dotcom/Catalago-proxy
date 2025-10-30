@@ -45,7 +45,12 @@ export async function GET(req) {
       "";
 
     return new Response(
-      JSON.stringify({ success: true, title: title.trim(), image, price }),
+      JSON.stringify({
+        success: true,
+        title: title.trim(),
+        image,
+        price,
+      }),
       { status: 200, headers }
     );
   } catch (error) {
