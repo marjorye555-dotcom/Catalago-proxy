@@ -6,9 +6,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type",
 };
 
-/**
- * Lida com requisições GET (rota principal da API)
- */
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const url = searchParams.get("url");
@@ -72,9 +69,6 @@ export async function GET(req) {
   }
 }
 
-/**
- * Lida com requisições OPTIONS (pré-flight do CORS)
- */
 export function OPTIONS() {
   return new Response(null, {
     status: 200,
